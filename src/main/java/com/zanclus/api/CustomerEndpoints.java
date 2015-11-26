@@ -4,15 +4,14 @@ import com.zanclus.data.access.CustomerDAO;
 import com.zanclus.data.entities.Customer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 /**
  * Created by dphillips on 11/14/15.
@@ -32,5 +31,10 @@ public class CustomerEndpoints {
     @RequestMapping(value="/{id}", method=GET)
     public Customer findById(@PathVariable("id") Long id) {
         return dao.findOne(id);
+    }
+
+    @RequestMapping(value="/", method=PUT, consumes="application/json", produces="application/json")
+    public @ResponseBody Customer addCustomer(@RequestBody Customer customer) throws Exception {
+        return dao.save(customer);
     }
 }
