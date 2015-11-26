@@ -5,3 +5,5 @@
 spring-vertx-conversion.iml
 mvnw
 mvnw.cmd
+target
+target/**
