@@ -1,0 +1,7 @@
+.idea
+.idea/**
+.mvn
+.mvn/**
+spring-vertx-conversion.iml
+mvnw
+mvnw.cmd
