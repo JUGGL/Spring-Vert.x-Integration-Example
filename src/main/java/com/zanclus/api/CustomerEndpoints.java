@@ -14,26 +14,35 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 /**
- * Created by dphillips on 11/14/15.
+ * {@link RestController} for {@link Customer} documents.
  */
 @RestController
-@RequestMapping("/v1/customer")
+@RequestMapping(value = "/v1/customer", produces="application/json")
 @Slf4j
 public class CustomerEndpoints {
     @Autowired
     private CustomerDAO dao;
 
-    @RequestMapping(value="/", method=GET)
-    public List<Customer> findAll() {
+    /**
+     * Return a list of all {@link Customer}s from the database
+     * @return
+     */
+    @RequestMapping(method=GET)
+    public @ResponseBody List<Customer> findAll() {
         return StreamSupport.stream(dao.findAll().spliterator(), false).collect(Collectors.toList());
     }
 
+    /**
+     * Return the {@link Customer} identified
+     * @param id The ID of the {@link Customer} to be returned.
+     * @return A {@link Customer} document or {@code null} if not found.
+     */
     @RequestMapping(value="/{id}", method=GET)
-    public Customer findById(@PathVariable("id") Long id) {
+    public @ResponseBody Customer findById(@PathVariable("id") Long id) {
         return dao.findOne(id);
     }
 
-    @RequestMapping(value="/", method=PUT, consumes="application/json", produces="application/json")
+    @RequestMapping(method=PUT, consumes="application/json")
     public @ResponseBody Customer addCustomer(@RequestBody Customer customer) throws Exception {
         return dao.save(customer);
     }

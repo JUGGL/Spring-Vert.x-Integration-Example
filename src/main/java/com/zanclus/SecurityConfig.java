@@ -7,7 +7,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 /**
- * Created by dphillips on 11/26/15.
+ * Disable all security checks. DO NOT USE THIS IN PRODUCTION! YOU WILL GET HACKED! YOU HAVE BEEN WARNED!!!
  */
 @Configuration
 @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
