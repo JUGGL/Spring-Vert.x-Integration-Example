@@ -5,12 +5,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zanclus.data.access.CustomerDAO;
 import com.zanclus.data.entities.Customer;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.jacpfx.vertx.spring.SpringVerticle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -24,75 +29,65 @@ import java.util.stream.StreamSupport;
  * Created by dphillips on 11/25/15.
  */
 @Component
+@SpringVerticle
 @Slf4j
 public class CustomerVerticle {
-
-    @Autowired
-    private CustomerDAO dao;
-
-    @Autowired
-    private ObjectMapper mapper;
 
     @Autowired
     private Vertx vertx;
 
     @PostConstruct
     public void start() throws Exception {
-        Router router = Router.router(vertx);
-        router.route().handler(BodyHandler.create());
-        router.get("/v1/customer/:id")
-                .produces("application/json")
-                .blockingHandler(this::getCustomerById);
-        router.put("/v1/customer")
-                .consumes("application/json")
-                .produces("application/json")
-                .blockingHandler(this::addCustomer);
-        router.get("/v1/customer")
-                .produces("application/json")
-                .blockingHandler(this::getAllCustomers);
-        vertx.createHttpServer().requestHandler(router::accept).listen(8080);
-    }
-
-    private void addCustomer(RoutingContext rc) {
-        try {
-            String body = rc.getBodyAsString();
-            Customer customer = mapper.readValue(body, Customer.class);
-            Customer saved = dao.save(customer);
-            if (saved!=null) {
-                rc.response().setStatusMessage("Accepted").setStatusCode(202).end(mapper.writeValueAsString(saved));
+        log.info("Successfully create CustomerVerticle");
+        DeploymentOptions deployOpts = new DeploymentOptions().setWorker(true).setMultiThreaded(true).setInstances(4);
+        vertx.deployVerticle("java-spring:com.zanclus.verticles.CustomerWorker", deployOpts, res -> {
+            if (res.succeeded()) {
+                Router router = Router.router(vertx);
+                router.route().handler(BodyHandler.create());
+                final DeliveryOptions opts = new DeliveryOptions()
+                        .setSendTimeout(2000);
+                router.get("/v1/customer/:id")
+                        .produces("application/json")
+                        .handler(rc -> {
+                            opts.addHeader("method", "getCustomer")
+                                    .addHeader("id", rc.request().getParam("id"));
+                            vertx.eventBus().send("com.zanclus.customer", null, opts, reply -> handleReply(reply, rc));
+                        });
+                router.put("/v1/customer")
+                        .consumes("application/json")
+                        .produces("application/json")
+                        .handler(rc -> {
+                            opts.addHeader("method", "addCustomer");
+                            vertx.eventBus().send("com.zanclus.customer", rc.getBodyAsJson(), opts, reply -> handleReply(reply, rc));
+                        });
+                router.get("/v1/customer")
+                        .produces("application/json")
+                        .handler(rc -> {
+                            opts.addHeader("method", "getAllCustomers");
+                            vertx.eventBus().send("com.zanclus.customer", null, opts, reply -> handleReply(reply, rc));
+                        });
+                vertx.createHttpServer().requestHandler(router::accept).listen(8080);
             } else {
-                rc.response().setStatusMessage("Bad Request").setStatusCode(400).end("Bad Request");
+                log.error("Failed to deploy worker verticles.", res.cause());
             }
-        } catch (IOException e) {
-            rc.response().setStatusMessage("Server Error").setStatusCode(500).end("Server Error");
-            log.error("Server error", e);
-        }
+        });
     }
 
-    private void getCustomerById(RoutingContext rc) {
-        log.info("Request for single customer");
-        Long id = Long.parseLong(rc.request().getParam("id"));
-        try {
-            Customer customer = dao.findOne(id);
-            if (customer==null) {
-                rc.response().setStatusMessage("Not Found").setStatusCode(404).end("Not Found");
+    private void handleReply(AsyncResult<Message<Object>> reply, RoutingContext rc) {
+        if (reply.succeeded()) {
+            Message<Object> replyMsg = reply.result();
+            if (reply.succeeded()) {
+                rc.response()
+                        .setStatusMessage("OK")
+                        .setStatusCode(200)
+                        .putHeader("Content-Type", "application/json")
+                        .end(replyMsg.body().toString());
             } else {
-                rc.response().setStatusMessage("OK").setStatusCode(200).end(mapper.writeValueAsString(dao.findOne(id)));
+                rc.response()
+                        .setStatusCode(500)
+                        .setStatusMessage("Server Error")
+                        .end(reply.cause().getLocalizedMessage());
             }
-        } catch (JsonProcessingException jpe) {
-            rc.response().setStatusMessage("Server Error").setStatusCode(500).end("Server Error");
-            log.error("Server error", jpe);
-        }
-    }
-
-    private void getAllCustomers(RoutingContext rc) {
-        log.info("Request for all customers");
-        List<Customer> customers = StreamSupport.stream(dao.findAll().spliterator(), false).collect(Collectors.toList());
-        try {
-            rc.response().setStatusMessage("OK").setStatusCode(200).end(mapper.writeValueAsString(customers));
-        } catch (JsonProcessingException jpe) {
-            rc.response().setStatusMessage("Server Error").setStatusCode(500).end("Server Error");
-            log.error("Server error", jpe);
         }
     }
 }
