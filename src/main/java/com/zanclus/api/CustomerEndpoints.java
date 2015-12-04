@@ -25,7 +25,7 @@ public class CustomerEndpoints {
 
     /**
      * Return a list of all {@link Customer}s from the database
-     * @return
+     * @return A {@link List} of {@link Customer} objects representing all customers from the database
      */
     @RequestMapping(method=GET)
     public @ResponseBody List<Customer> findAll() {
@@ -42,6 +42,12 @@ public class CustomerEndpoints {
         return dao.findOne(id);
     }
 
+    /**
+     * Adds a new {@link Customer} entity to the database as specified by the JSON document in the PUT request.
+     * @param customer The JSON body of the PUT request is automatically translated into a {@link Customer} entity
+     * @return The persisted {@link Customer} entity after the {@code id} has been set.
+     * @throws Exception
+     */
     @RequestMapping(method=PUT, consumes="application/json")
     public @ResponseBody Customer addCustomer(@RequestBody Customer customer) throws Exception {
         return dao.save(customer);
