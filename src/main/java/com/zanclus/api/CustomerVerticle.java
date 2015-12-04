@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- * Created by dphillips on 11/25/15.
+ * A {@link io.vertx.core.Verticle} which handles requests for the REST endpoints
  */
 @Component
 @SpringVerticle
@@ -36,11 +36,19 @@ public class CustomerVerticle {
     @Autowired
     private Vertx vertx;
 
+    /**
+     * Configure the {@link Router} and start the {@link io.vertx.core.http.HttpServer}
+     * @throws Exception
+     */
     @PostConstruct
     public void start() throws Exception {
         log.info("Successfully create CustomerVerticle");
+
+        // Deploy the CustomerWorker verticle and set it to have 4 instances
         DeploymentOptions deployOpts = new DeploymentOptions().setWorker(true).setMultiThreaded(true).setInstances(4);
         vertx.deployVerticle("java-spring:com.zanclus.verticles.CustomerWorker", deployOpts, res -> {
+            // Once the worker verticles are successfully deployed, create the Router and HttpServer
+
             if (res.succeeded()) {
                 Router router = Router.router(vertx);
                 router.route().handler(BodyHandler.create());
@@ -73,6 +81,11 @@ public class CustomerVerticle {
         });
     }
 
+    /**
+     * Handle reply messages and convert them to {@link io.netty.handler.codec.http.HttpResponse} values.
+     * @param reply The reply message
+     * @param rc The {@link RoutingContext}
+     */
     private void handleReply(AsyncResult<Message<Object>> reply, RoutingContext rc) {
         if (reply.succeeded()) {
             Message<Object> replyMsg = reply.result();

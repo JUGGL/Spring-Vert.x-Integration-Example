@@ -5,7 +5,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * Created by dphillips on 11/14/15.
+ * A Spring Data JPA {@link Repository} which implements the default CRUD operations for the {@link Customer} entity
  */
 @Repository
 public interface CustomerDAO extends CrudRepository<Customer, Long> {

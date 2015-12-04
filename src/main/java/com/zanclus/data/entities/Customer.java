@@ -7,7 +7,7 @@ import lombok.experimental.Accessors;
 import javax.persistence.*;
 
 /**
- * Created by dphillips on 11/14/15.
+ * A JPA annotated POJO representing a Customer entity
  */
 @Data
 @Accessors(fluent = true, chain = true)

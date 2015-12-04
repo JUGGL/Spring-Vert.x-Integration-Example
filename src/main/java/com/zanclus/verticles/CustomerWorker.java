@@ -30,11 +30,20 @@ public class CustomerWorker extends AbstractVerticle {
     @Autowired
     private ObjectMapper mapper;
 
+    /**
+     * Entry point for this {@link io.vertx.core.Verticle}
+     * @throws Exception
+     */
     @Override
     public void start() throws Exception {
+        // Register a consumer on the event bus to listen for message sent to "com.zanclus.customer"
         vertx.eventBus().consumer("com.zanclus.customer").handler(this::handleDatabaseRequest);
     }
 
+    /**
+     * Handle database operations for a given message
+     * @param msg The {@link Message} containing the information to tell which database operations to perform
+     */
     public void handleDatabaseRequest(Message<Object> msg) {
         String method = msg.headers().get("method");
 
