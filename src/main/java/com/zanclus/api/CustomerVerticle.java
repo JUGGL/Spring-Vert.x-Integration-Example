@@ -2,6 +2,7 @@ package com.zanclus.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zanclus.Application;
 import com.zanclus.data.access.CustomerDAO;
 import com.zanclus.data.entities.Customer;
 import io.vertx.core.AbstractVerticle;
@@ -26,10 +27,12 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- * Created by dphillips on 11/25/15.
+ * A {@link io.vertx.core.Verticle} implemented and injected using Spring
+ *
+ * @see <a href="https://github.com/amoAHCP/spring-vertx-ext">spring-vertx-ext</a>
  */
 @Component
-@SpringVerticle
+@SpringVerticle(springConfig=Application.class)
 @Slf4j
 public class CustomerVerticle {
 

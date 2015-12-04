@@ -2,7 +2,10 @@ package com.zanclus;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hazelcast.config.Config;
 import io.vertx.core.Vertx;
+import io.vertx.core.spi.cluster.ClusterManager;
+import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -75,5 +78,12 @@ public class Application {
         final JpaTransactionManager txManager = new JpaTransactionManager();
         txManager.setEntityManagerFactory(emf);
         return txManager;
+    }
+
+    @Bean
+    public ClusterManager clusterManager() {
+        // TODO: Implement programmatic config of the ClusterManager AND Hazelcast config
+        Config hazelcastConfig = new Config();
+        return new HazelcastClusterManager(hazelcastConfig);
     }
 }
