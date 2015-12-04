@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- * Created by dphillips on 11/25/15.
+ * A {@link io.vertx.core.Verticle} which handles requests for the REST endpoints
  */
 @Component
 @Slf4j
@@ -36,6 +36,10 @@ public class CustomerVerticle {
     @Autowired
     private Vertx vertx;
 
+    /**
+     * Set up the Vert.x Web routes and start the HTTP server
+     * @throws Exception
+     */
     @PostConstruct
     public void start() throws Exception {
         Router router = Router.router(vertx);
@@ -53,6 +57,10 @@ public class CustomerVerticle {
         vertx.createHttpServer().requestHandler(router::accept).listen(8080);
     }
 
+    /**
+     * Add a new customer to the database
+     * @param rc The {@link RoutingContext} for the request
+     */
     private void addCustomer(RoutingContext rc) {
         try {
             String body = rc.getBodyAsString();
@@ -69,6 +77,11 @@ public class CustomerVerticle {
         }
     }
 
+
+    /**
+     * Get a {@link Customer} from the database as indicated by the {@code id}
+     * @param rc The {@link RoutingContext} for the request
+     */
     private void getCustomerById(RoutingContext rc) {
         log.info("Request for single customer");
         Long id = Long.parseLong(rc.request().getParam("id"));
@@ -85,6 +98,11 @@ public class CustomerVerticle {
         }
     }
 
+
+    /**
+     * Get a {@link List} of all {@link Customer} records in the database
+     * @param rc The {@link RoutingContext} for the request
+     */
     private void getAllCustomers(RoutingContext rc) {
         log.info("Request for all customers");
         List<Customer> customers = StreamSupport.stream(dao.findAll().spliterator(), false).collect(Collectors.toList());

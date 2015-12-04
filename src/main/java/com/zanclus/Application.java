@@ -6,7 +6,6 @@ import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
@@ -19,10 +18,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
-import java.util.Arrays;
 
 /**
- * Created by dphillips on 11/14/15.
+ * Entry point for the application via Spring Boot. Bootstraps the dependency injection framework and sets up the
+ * injectable resources for database connectivity
  */
 @SpringBootApplication
 @EnableJpaRepositories
@@ -35,11 +34,19 @@ public class Application {
 
     private Vertx vertx;
 
+    /**
+     * Create an {@link ObjectMapper} for use in (de)serializing objects to/from JSON
+     * @return An instance of {@link ObjectMapper}
+     */
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper(new JsonFactory());
     }
 
+    /**
+     * A singleton instance of {@link Vertx} which is used throughout the application
+     * @return An instance of {@link Vertx}
+     */
     @Bean
     public Vertx getVertxInstance() {
         if (this.vertx==null) {
@@ -48,12 +55,20 @@ public class Application {
         return this.vertx;
     }
 
+    /**
+     * Creates a datasource using an in-memory embedded database
+     * @return An instance of {@link DataSource} representing a connection pool to the database
+     */
     @Bean
     public DataSource dataSource() {
         EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
         return builder.setType(EmbeddedDatabaseType.HSQL).build();
     }
 
+    /**
+     * Creates a JPA {@link EntityManagerFactory} for use in Spring Data JPA
+     * @return An instance of {@link EntityManagerFactory}
+     */
     @Bean
     public EntityManagerFactory entityManagerFactory() {
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
@@ -68,6 +83,11 @@ public class Application {
         return factory.getObject();
     }
 
+    /**
+     * Sets up transaction management for Spring Data JPA so that database operations are transactional
+     * @param emf The {@link javax.persistence.EntityManagerFactory} created above
+     * @return An instance of {@link PlatformTransactionManager} based on JPA
+     */
     @Bean
     public PlatformTransactionManager transactionManager(final EntityManagerFactory emf) {
         final JpaTransactionManager txManager = new JpaTransactionManager();
