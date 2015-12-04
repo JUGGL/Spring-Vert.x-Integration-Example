@@ -16,10 +16,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
-import java.util.Arrays;
 
 /**
- * Created by dphillips on 11/14/15.
+ * Entry point for the application via Spring Boot. Bootstraps the dependency injection framework and sets up the
+ * injectable resources for database connectivity
  */
 @SpringBootApplication
 @EnableJpaRepositories
@@ -28,22 +28,22 @@ import java.util.Arrays;
 public class Application {
     public static void main(String[] args) {
         ApplicationContext ctx = SpringApplication.run(Application.class, args);
-
-        System.out.println("Let's inspect the beans provided by Spring Boot:");
-
-        String[] beanNames = ctx.getBeanDefinitionNames();
-        Arrays.sort(beanNames);
-        for (String beanName : beanNames) {
-            System.out.println(beanName);
-        }
     }
 
+    /**
+     * Creates a datasource using an in-memory embedded database
+     * @return
+     */
     @Bean
     public DataSource dataSource() {
         EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
         return builder.setType(EmbeddedDatabaseType.HSQL).build();
     }
 
+    /**
+     * Creates a JPA {@link EntityManagerFactory} for use in Spring Data JPA
+     * @return An instance of {@link EntityManagerFactory}
+     */
     @Bean
     public EntityManagerFactory entityManagerFactory() {
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
@@ -58,6 +58,11 @@ public class Application {
         return factory.getObject();
     }
 
+    /**
+     * Sets up transaction management for Spring Data JPA so that database operations are transactional
+     * @param emf The {@link javax.persistence.EntityManagerFactory} created above
+     * @return An instance of {@link PlatformTransactionManager} based on JPA
+     */
     @Bean
     public PlatformTransactionManager transactionManager(final EntityManagerFactory emf) {
         final JpaTransactionManager txManager = new JpaTransactionManager();
