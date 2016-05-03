@@ -90,7 +90,7 @@ public class CustomerVerticle {
             if (customer==null) {
                 rc.response().setStatusMessage("Not Found").setStatusCode(404).end("Not Found");
             } else {
-                rc.response().setStatusMessage("OK").setStatusCode(200).end(mapper.writeValueAsString(dao.findOne(id)));
+                rc.response().setStatusMessage("OK").setStatusCode(200).end(mapper.writeValueAsString(customer));
             }
         } catch (JsonProcessingException jpe) {
             rc.response().setStatusMessage("Server Error").setStatusCode(500).end("Server Error");
